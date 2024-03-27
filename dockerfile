@@ -2,10 +2,11 @@ FROM golang:1.22.1
 
 WORKDIR /app
 
-COPY go.mod .
-COPY main.go .
+COPY . /app
 
-RUN go build -o bin
+RUN apt-get update && go mod tidy && go mod vendor
+EXPOSE 8080
+CMD ["go", "run", "cmd/receiptprocessor/main.go"]
 
-ENTRYPOINT ["/app/bin"]
+
 
