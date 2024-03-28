@@ -3,13 +3,13 @@ package handlers
 import (
 	"bytes"
 	"net/http"
-	"receipt-processor-challenge/models"
 	"testing"
 
 	json "github.com/json-iterator/go"
+	"github.com/praveensundaram1/receipt-processor-challenge/models"
 )
 
-
+// GetSampleReceipt returns a sample receipt for testing.
 func GetSampleReceipt() models.Receipt {
 	return models.Receipt{
 		Retailer:     "M&M Corner Market",
@@ -26,6 +26,7 @@ func GetSampleReceipt() models.Receipt {
 	}
 }
 
+// SimulateReceiptPostRequest creates a new POST request with the given receipt body.
 func SimulateReceiptPostRequest(rBody models.Receipt) (*http.Request, error) {
 	bodyBytes, err := json.Marshal(rBody)
 	if err != nil {
@@ -34,6 +35,7 @@ func SimulateReceiptPostRequest(rBody models.Receipt) (*http.Request, error) {
 	return http.NewRequest(http.MethodPost, "/dummy-url", bytes.NewBuffer(bodyBytes))
 }
 
+// TestNewReceiptStore tests the NewReceiptStore function.
 func TestNewReceiptStore(t *testing.T) {
 	receiptStore := NewReceiptStore()
 	if receiptStore == nil {
@@ -41,6 +43,7 @@ func TestNewReceiptStore(t *testing.T) {
 	}
 }
 
+// TestProcessReceipt tests the ProcessReceipt function.
 func TestValidateReceipt(t *testing.T) {
 	var tests = []struct {
 		name      string
@@ -73,16 +76,44 @@ func TestValidateReceipt(t *testing.T) {
 	}
 }
 
+// TestComputeReceiptPoints tests the computeReceiptPoints function.
 func TestComputeReceiptPoints(t *testing.T) {
-	receipt := GetSampleReceipt()
-	points := computeReceiptPoints(&receipt)
-	expectedPoints := 109 // Update this value based on your business logic
+	testCases := []struct {
+		name           string
+		modifyReceipt  func(models.Receipt) models.Receipt
+		expectedPoints int
+	}{
+		{
+			name: "Default receipt",
+			modifyReceipt: func(receipt models.Receipt) models.Receipt {
+				return receipt // No modification needed, use sample receipt as-is
+			},
+			expectedPoints: 109,
+		},
+		{
+			name: "Modified receipt with different purchase date and items",
+			modifyReceipt: func(receipt models.Receipt) models.Receipt {
+				receipt.PurchaseDate = "2022-03-21"
+				receipt.Items = []models.Item{
+					{ShortDescription: "Gatorades", Price: "2.25"},
+					{ShortDescription: "Gatorades", Price: "2.25"},
+					{ShortDescription: "Gatorades", Price: "2.25"},
+					{ShortDescription: "Gatorades", Price: "2.25"},
+				}
+				return receipt
+			},
+			expectedPoints: 119,
+		},
+	}
 
-	if points != expectedPoints {
-		t.Errorf("computeReceiptPoints() got = %d, want %d", points, expectedPoints)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			receipt := GetSampleReceipt()
+			modifiedReceipt := tc.modifyReceipt(receipt)
+			points := computeReceiptPoints(&modifiedReceipt)
+			if points != tc.expectedPoints {
+				t.Errorf("%s: computeReceiptPoints() got = %d, expected %d", tc.name, points, tc.expectedPoints)
+			}
+		})
 	}
 }
-
-
-
-

@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"net/http"
-	"receipt-processor-challenge/models"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	//"reflect"
 
 	"github.com/mitchellh/hashstructure"
 	"github.com/pkg/errors"
+	"github.com/praveensundaram1/receipt-processor-challenge/models"
 )
 
 // Precompiling regular expressions for efficiency, readability, and reusability
@@ -27,6 +27,11 @@ var (
 	priceRegex       = regexp.MustCompile(`^\d+\.\d{2}$`)
 )
 
+/*
+*
+This function checks the validity of the receipt data in the request body.
+*
+*/
 func checkReceiptValidity(r *http.Request) (*models.Receipt, error) {
 	var parsedReceipt models.Receipt
 	requestBody, err := io.ReadAll(r.Body)
@@ -45,6 +50,11 @@ func checkReceiptValidity(r *http.Request) (*models.Receipt, error) {
 	return &parsedReceipt, nil
 }
 
+/*
+*
+Helper function to validate Retailer, Date, Time, Total, and Item Price & Description
+*
+*/
 func validateReceiptData(receipt models.Receipt) error {
 
 	validations := []struct {
@@ -65,7 +75,7 @@ func validateReceiptData(receipt models.Receipt) error {
 	}
 
 	for _, item := range receipt.Items {
-		if !priceRegex.MatchString(item.Price){
+		if !priceRegex.MatchString(item.Price) {
 			return errors.New("validateReceiptData: price validation failed")
 		}
 		if !descriptionRegex.MatchString(item.ShortDescription) {
@@ -83,6 +93,11 @@ const (
 	pointsForTimeBetweenTwoAndFourPM  = 10
 )
 
+/*
+*
+This function computes the points for a receipt based on the retailer name, total, items, purchase date, and purchase time.
+*
+*/
 func computeReceiptPoints(receipt *models.Receipt) int {
 	points := computePointsFromRetailerName(receipt.Retailer)
 	points += computeBonusForTotal(receipt.Total)
@@ -92,6 +107,11 @@ func computeReceiptPoints(receipt *models.Receipt) int {
 	return points
 }
 
+/*
+*
+Helper function to compute points based on the retailer name.
+*
+*/
 func computePointsFromRetailerName(retailer string) int {
 	points := 0
 	for _, char := range retailer {
@@ -102,15 +122,26 @@ func computePointsFromRetailerName(retailer string) int {
 	return points
 }
 
+/*
+*
+Helper function to check if a character is alphanumeric.
+*
+*/
 func isAlphanumeric(char rune) bool {
 	return ('a' <= char && char <= 'z') || ('A' <= char && char <= 'Z') || ('0' <= char && char <= '9')
 }
 
+/*
+*
+Helper function to compute bonus points based on the total.
+*
+*/
 func computeBonusForTotal(total string) int {
 	points := 0
 	// Remove the decimal point and convert to cents. We know from the regex that the total is in the correct format.
 	receiptTotalCents, err := strconv.ParseInt(strings.ReplaceAll(total, ".", ""), 10, 64)
 	if err != nil {
+		log.Println("Error parsing total")
 		return 0
 	}
 
@@ -123,13 +154,18 @@ func computeBonusForTotal(total string) int {
 	return points
 }
 
+/*
+*
+Helper function to compute points based on the items in the receipt.
+*
+*/
 func computeItemPoints(items []models.Item) int {
 	points := 5 * (len(items) / 2)
 	for _, item := range items {
 		if len(strings.TrimSpace(item.ShortDescription))%3 == 0 {
-			fmt.Println("yes", item.ShortDescription)
 			itemPriceCents, err := strconv.ParseFloat(strings.ReplaceAll(item.Price, ".", ""), 64)
 			if err != nil {
+				log.Println("Error parsing item price")
 				continue
 			}
 			points += int(math.Ceil(itemPriceCents * 0.2 / 100.0))
@@ -138,9 +174,15 @@ func computeItemPoints(items []models.Item) int {
 	return points
 }
 
+/*
+*
+Helper function to compute bonus points based on the purchase date
+*
+*/
 func computeDateBonus(purchaseDateStr string) int {
 	purchaseDate, err := time.Parse(time.DateOnly, purchaseDateStr)
 	if err != nil {
+		log.Println("Error parsing purchase date")
 		return 0
 	}
 	if purchaseDate.Day()%2 == 1 {
@@ -149,11 +191,17 @@ func computeDateBonus(purchaseDateStr string) int {
 	return 0
 }
 
+/*
+*
+Helper function to compute bonus points based on the purchase time
+*
+*/
 func computeTimeBonus(purchaseTimeStr string) int {
 	//Go uses Mon Jan 2 15:04:05 MST 2006 as the reference time for parsing dates and times.
 	purchaseTime, err := time.Parse("15:04", purchaseTimeStr)
 
 	if err != nil {
+		log.Println("Error parsing purchase time")
 		return 0
 	}
 	twoPM, _ := time.Parse("15:04", "14:00")
@@ -164,17 +212,24 @@ func computeTimeBonus(purchaseTimeStr string) int {
 	return 0
 }
 
+/*
+*
+This function generates a receipt ID and stores the receipt in the receipt store.
+*
+*/
 func (receiptStore *ReceiptStore) generateAndStoreReceipt(receipt *models.Receipt) (string, error) {
 	receiptStore.lock.Lock()
 	defer receiptStore.lock.Unlock()
 
-	receiptHash, err := hashstructure.Hash(receipt, nil)
+	receiptHash, err := hashstructure.Hash(receipt, nil) //Hashing receipt to generate a unique receipt ID
 	if err != nil {
+		log.Println("Error hashing receipt")
 		return "", fmt.Errorf("error hashing receipt")
 	}
 
-	receiptID := strconv.FormatUint(receiptHash, 10)
+	receiptID := strconv.FormatUint(receiptHash, 10) //Converting the hash to a string
 	if _, exists := receiptStore.receipts[receiptID]; exists {
+		log.Println("Duplicate receipt submission")
 		return "", fmt.Errorf("ProcessReceipt: Duplicate receipt submission")
 	}
 
@@ -188,6 +243,7 @@ func sendReceiptResponse(w http.ResponseWriter, receiptID string) error {
 	response := models.ReceiptResponse{Id: receiptID}
 	data, err := json.Marshal(response)
 	if err != nil {
+		log.Println("Error marshaling receipt response")
 		return err
 	}
 	writeJSONResponse(w, http.StatusOK, data)

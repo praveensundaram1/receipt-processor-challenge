@@ -5,6 +5,11 @@ import (
 	"net/http"
 )
 
+/*
+*
+Helper function to write JSON response with status code.
+*
+*/
 func writeJSONResponse(w http.ResponseWriter, statusCode int, data []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
@@ -16,6 +21,11 @@ func writeJSONResponse(w http.ResponseWriter, statusCode int, data []byte) {
 	}
 }
 
+/*
+*
+Helper function to handle errors.
+*
+*/
 func handleErr(w http.ResponseWriter, err error, errorMessage string, statusCode int) {
 	if err != nil {
 		log.Printf("%s: %v", errorMessage, err)

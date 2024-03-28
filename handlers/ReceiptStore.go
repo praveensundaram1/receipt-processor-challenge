@@ -1,8 +1,9 @@
 package handlers
 
 import (
-	"receipt-processor-challenge/models"
 	"sync"
+
+	"github.com/praveensundaram1/receipt-processor-challenge/models"
 )
 
 /*

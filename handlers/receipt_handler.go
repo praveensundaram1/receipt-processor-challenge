@@ -2,13 +2,18 @@ package handlers
 
 import (
 	"net/http"
-	"receipt-processor-challenge/models"
 	"strings"
+
+	"github.com/praveensundaram1/receipt-processor-challenge/models"
 
 	json "github.com/json-iterator/go"
 	"github.com/julienschmidt/httprouter"
 )
 
+/**
+* @api {post} /receipts/process Process Receipt
+* @apiDescription This endpoint processes a receipt and stores it in the receipt store.
+**/
 func (receiptStore *ReceiptStore) ProcessReceipt(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	receipt, err := checkReceiptValidity(r)
 	if err != nil {
@@ -27,6 +32,10 @@ func (receiptStore *ReceiptStore) ProcessReceipt(w http.ResponseWriter, r *http.
 	}
 }
 
+/**
+* @api {get} /receipts/:id/points Fetch Points
+* @apiDescription This endpoint fetches the points for a receipt.
+**/
 func (receiptStore *ReceiptStore) FetchPoints(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	receiptID := strings.TrimSpace(params.ByName("id"))
 	if receiptID == "" {
