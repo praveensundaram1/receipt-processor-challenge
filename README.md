@@ -53,7 +53,7 @@ The server is designed to handle two specific types of HTTP requests, as describ
    Method: POST
    Description: This endpoint is responsible for accepting and processing receipt data.
 
-Here are 2 examples
+Here are 2 examples for your convenience
 
 ```bash
 curl --location 'http://localhost:8080/receipts/process' \
@@ -84,10 +84,10 @@ curl --location 'http://localhost:8080/receipts/process' \
 }'
 ```
 
-You should get back a JSON object that looks like this:
+You should get back a JSON object that looks like this: 
 
 ```json
-{ "points" : "28" }
+{"id":"1374247687664264074"}
 ```
 
 ```bash
@@ -116,10 +116,10 @@ curl --location 'http://localhost:8080/receipts/process' \
 }'
 ```
 
-You should get back a JSON object that looks like this:
+You should get back a JSON object that looks like this: 
 
 ```json
-{ "points" : "109" }
+{"id":"8914691084611499817"}
 ```
 
 Note: A detailed description of how these points are calculated can be found [here](https://github.com/fetch-rewards/receipt-processor-challenge#rules)
@@ -130,6 +130,12 @@ Note: A detailed description of how these points are calculated can be found [he
 
 ```bash
 curl --location 'http://localhost:8080/receipts/{id}/points'
+```
+
+You should get back a JSON object that looks like this:
+
+```json
+{ "points" : "109" }
 ```
 
 ### Running Tests
