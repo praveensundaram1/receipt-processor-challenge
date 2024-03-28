@@ -9,12 +9,12 @@ To see a more detailed description of the requirements, click [here](https://git
 
 Note: To resolve any issues, email me at praveen.sundaram.2022@gmail.com
 
-##Project Setup
+## Project Setup
 
 The project can be run using either Go directly or within a Docker container. After cloning the repository, you must `cd` to the `receipt-processor-challenge` directory. 
 
 
-###Setup Instructions to Run Application on Local Machine
+### Setup Instructions to Run Application on Local Machine
 
 1. Run setup commands
 
@@ -31,7 +31,7 @@ go run cmd/receiptprocessor/main.go
 
 Once the server starts, it will listen on port 8080 and be ready to handle requests. Look for the message "Listening on localhost:8080" in the terminal. To stop the server, press `ctrl-c`.
 
-###Setup Instructions to Run Application on Docker Container
+### Setup Instructions to Run Application on Docker Container
 
 1. Build the Docker container using the following command, tagging it as fetch-receipt-service:
 
@@ -45,7 +45,7 @@ docker run -it -p 8080:8080 fetch-receipt-service
 ```
 Once the server starts, it will listen on port 8080 and be ready to handle requests. Look for the message "Listening on localhost:8080" in the terminal. To stop the server, press `ctrl-c`.
 
-###Server Interaction and API Usage
+### Server Interaction and API Usage
 
 The server is designed to handle two specific types of HTTP requests, as described in the project specifications. To interact with the server, you can use applications like Postman or the command-line `curl` command on UNIX-based systems (including macOS and Linux). Below are examples of `curl` commands that demonstrates how to send requests to the server.  Any JSON that follows the `api.yml` file specifications will work.
 
@@ -132,7 +132,7 @@ Note: A detailed description of how these points are calculated can be found [he
 curl --location 'http://localhost:8080/receipts/{id}/points'
 ```
 
-###Running Tests
+### Running Tests
 
 To run unit tests, run the following command:
 
